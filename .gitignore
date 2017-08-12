@@ -1,0 +1,6 @@
+*.o
+*.swp
+*.core
+p0
+getword_test
+tags
