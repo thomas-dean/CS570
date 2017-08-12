@@ -23,5 +23,8 @@ clean:
 test:		${TESTPROG}
 		./${TESTPROG}
 
+tags:
+		exctags -R --fields=+S --c-kinds=+defgmstux
+
 lint:
-		/opt/SUNWspro/bin/lint getword.c ${PROGRAM}.c
+		clang-tidy39 '-header-filter=.*' '-checks=*' *.c --
