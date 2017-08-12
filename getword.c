@@ -1,38 +1,53 @@
 #include <assert.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "getword.h"
 
-/* TODO: make this a tagged union, so identifier names can be recorded */
-/* TODO: add the rest of the token types */
-typedef enum token {
-    /* Whitespace */
-    SPC_TOK,
-    TAB_TOK,
-    NL_TOK,
-    EOF_TOK
-} token_t;
-
-static token_t gettok(void);
-
 int getword(char *w)
 {
-    token_t tok;
+    int c;
+    uint32_t i = 0;
 
-    tok = gettok();
-    switch (tok) {
-        case EOF_TOK:
-            *w = '\0';
-            return -1;
-        default:
-            fprintf(stderr, "Found unimplemented token type (%d)\n", tok);
-            assert(false);
+    /* Discard leading tabs */
+    while ((c = getchar()) == '\t') {
+        ;
     }
-}
+    if (c == '\n') {
+        *w = '\0';
+        return 0;
+    }
+    if (c == EOF) {
+        *w = '\0';
+        return -1;
+    }
 
-static token_t
-gettok(void)
-{
-    /* FIXME */
-    return SPC_TOK;
+    /* Normal character; start of the word */
+    *w++ = c;
+    i++;
+
+    while (true) {
+        c = getchar();
+        switch (c) {
+            case '\t':
+            case EOF:
+                /* End of the word */
+                *w = '\0';
+                return i;
+            case '\n':
+                *w = '\0';
+                ungetc('\n', stdin);
+                return i;
+            default:
+                *w++ = c;
+                i++;
+                if (__builtin_expect(i == STORAGE - 1, 0)) {
+                    /* We have run out of space in w buffer */
+                    *w = '\0';
+                    return i;
+                }
+        }
+    }
+    /* This should not be reachable. If we get here, we have a problem */
+    assert(false);
 }
