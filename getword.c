@@ -1,13 +1,12 @@
 #include <assert.h>
 #include <stdbool.h>
-#include <stdint.h>
 
 #include "getword.h"
 
 int getword(char *w)
 {
     int c;
-    uint32_t i = 0;
+    int i = 0;
 
     /* Discard leading tabs */
     while ((c = getchar()) == '\t') {
@@ -23,7 +22,7 @@ int getword(char *w)
     }
 
     /* Normal character; start of the word */
-    *w++ = c;
+    *w++ = (char) c;
     i++;
 
     while (true) {
@@ -39,7 +38,7 @@ int getword(char *w)
                 ungetc('\n', stdin);
                 return i;
             default:
-                *w++ = c;
+                *w++ = (char) c;
                 i++;
                 if (__builtin_expect(i == STORAGE - 1, 0)) {
                     /* We have run out of space in w buffer */

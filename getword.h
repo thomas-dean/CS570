@@ -10,8 +10,8 @@
   for the simple things your initial attempt a creating getword.c should handle.
 */
 
-#ifndef _GETWORD_H
-#define _GETWORD_H
+#ifndef GETWORD_H
+#define GETWORD_H
 
 #include <stdio.h>
 #include <string.h>
