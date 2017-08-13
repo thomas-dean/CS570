@@ -5,7 +5,6 @@
 
 #include "getword.h"
 
-#define MAX_ITERATIONS 1000
 #define NUM_INPUTS 8
 
 static char* inputs[NUM_INPUTS] = {
@@ -19,7 +18,7 @@ static char* inputs[NUM_INPUTS] = {
     "Goodbye!"
 };
 
-static char* expected_words[NUM_INPUTS][100] = {
+static char* expected_words[NUM_INPUTS][3] = {
     {"foo bar baz bang", ""},
     {"this is a test", ""},
     {"empty string coming up...", ""},
@@ -30,7 +29,7 @@ static char* expected_words[NUM_INPUTS][100] = {
     {"Goodbye!", ""}
 };
 
-static int expected_counts[NUM_INPUTS][100] = {
+static int expected_counts[NUM_INPUTS][3] = {
     {16, -1},
     {14, -1},
     {25, -1},
@@ -41,7 +40,7 @@ static int expected_counts[NUM_INPUTS][100] = {
     {8, -1}
 };
 
-static int expected_calls[NUM_INPUTS] = {
+static uint32_t expected_calls[NUM_INPUTS] = {
     2, 2, 2, 2, 3, 2, 3, 2
 };
 
@@ -54,8 +53,8 @@ static int expected_calls[NUM_INPUTS] = {
  *  prints the expected and actual
  *  returns 1
  */
-static int try_input(int expected_counts[], char *expected_words[],
-        int num_expected_calls)
+static int try_input(int counts[], char *words[],
+        uint32_t num_expected_calls)
 {
     uint32_t i;
     int rv;
@@ -63,14 +62,14 @@ static int try_input(int expected_counts[], char *expected_words[],
 
     for (i = 0; i < num_expected_calls; ++i) {
         rv = getword(s);
-        if (rv != expected_counts[i]) {
+        if (rv != counts[i]) {
             fprintf(stderr, "getword returned %d, expected %d\n", rv,
-                    expected_counts[i]);
+                    counts[i]);
             return 1;
         }
-        if (strcmp(s, expected_words[i]) != 0) {
+        if (strcmp(s, words[i]) != 0) {
             fprintf(stderr, "getword found %s, expected %s\n", s,
-                    expected_words[i]);
+                    words[i]);
             return 1;
         }
     }
