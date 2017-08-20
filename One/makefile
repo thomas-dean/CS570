@@ -23,7 +23,7 @@ clean:
 test:		${TESTPROG}
 		./${TESTPROG}
 
-tags:
+tags:		getword.c ${PROGRAM}.c makefile getword.h ${TESTPROG}.c
 		exctags -R --fields=+S --c-kinds=+defgmstux
 
 lint:
