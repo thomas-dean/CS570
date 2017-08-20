@@ -18,30 +18,30 @@ static char* inputs[NUM_INPUTS] = {
     "Goodbye!"
 };
 
-static char* expected_words[NUM_INPUTS][3] = {
-    {"foo bar baz bang", ""},
-    {"this is a test", ""},
-    {"empty string coming up...", ""},
-    {"", ""},
-    {"leading tab...", "tabs in the middle...", ""},
-    {"that last one had a trailing tab", ""},
-    {"this one has a new line...", "", ""},
-    {"Goodbye!", ""}
+static char* expected_words[NUM_INPUTS][8] = {
+    {"foo", "bar", "baz", "bang", ""}, // 5
+    {"this", "is", "a", "test", ""}, // 5
+    {"empty", "string", "coming", "up...", ""}, // 5
+    {"", ""}, // 2
+    {"leading", "tab...", "tabs", "in", "the", "middle...", ""}, // 7
+    {"that", "last", "one", "had", "a", "trailing", "tab", ""}, // 8
+    {"this", "one", "has", "a", "new", "line...", "", ""}, // 8
+    {"Goodbye!", ""} // 2
 };
 
-static int expected_counts[NUM_INPUTS][3] = {
-    {16, -1},
-    {14, -1},
-    {25, -1},
+static int expected_counts[NUM_INPUTS][8] = {
+    {3, 3, 3, 4, -1},
+    {4, 2, 1, 4, -1},
+    {5, 6, 6, 5, -1},
     {0, -1},
-    {14, 21, -1},
-    {32, -1},
-    {26, 0, -1},
+    {7, 6, 4, 2, 3, 9, -1},
+    {4, 4, 3, 3, 1, 8, 3, -1},
+    {4, 3, 3, 1, 3, 7, 0, -1},
     {8, -1}
 };
 
 static uint32_t expected_calls[NUM_INPUTS] = {
-    2, 2, 2, 2, 3, 2, 3, 2
+    5, 5, 5, 2, 7, 8, 8, 2
 };
 
 /*
