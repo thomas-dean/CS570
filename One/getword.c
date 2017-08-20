@@ -3,15 +3,22 @@
 
 #include "getword.h"
 
+/*
+ * Removes white space characters from stdin. Where white space characters
+ * are defined as:
+ * '\t' (tab)
+ * ' '  (space)
+ *
+ * Returns the last non-white space character found.
+ */
+static int rmwhitespc(void);
+
 int getword(char *w)
 {
     int c;
     int i = 0;
 
-    /* Discard leading tabs */
-    while ((c = getchar()) == '\t') {
-        ;
-    }
+    c = rmwhitespc();
     if (c == '\n') {
         *w = '\0';
         return 0;
@@ -29,6 +36,7 @@ int getword(char *w)
         c = getchar();
         switch (c) {
             case '\t':
+            case ' ':
             case EOF:
                 /* End of the word */
                 *w = '\0';
@@ -49,4 +57,19 @@ int getword(char *w)
     }
     /* This should not be reachable. If we get here, we have a problem */
     assert(false);
+}
+
+static int rmwhitespc(void) {
+    int c;
+
+    while (true) {
+        c = getchar();
+        switch (c) {
+            case '\t':
+            case ' ':
+                continue;
+            default:
+                return c;
+        }
+    }
 }
