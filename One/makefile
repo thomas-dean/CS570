@@ -1,0 +1,30 @@
+# A Makefile for Program 0, CS570
+
+PROGRAM = p1
+TESTPROG = getword_test
+CC = gcc
+CFLAGS = -g
+
+${PROGRAM}:	getword.o ${PROGRAM}.o
+		${CC} -o ${PROGRAM} getword.o ${PROGRAM}.o
+
+${TESTPROG}:	getword.o ${TESTPROG}.o
+		${CC} -o ${TESTPROG} getword.o ${TESTPROG}.o
+
+${TESTPROG}.o:	getword.h
+
+${PROGRAM}.o:	getword.h
+
+getword.o:	getword.h
+
+clean:
+		rm -f *.o *.core ${PROGRAM} ${TESTPROG}
+
+test:		${TESTPROG}
+		./${TESTPROG}
+
+tags:
+		exctags -R --fields=+S --c-kinds=+defgmstux
+
+lint:
+		clang-tidy39 '-header-filter=.*' '-checks=*' *.c --
