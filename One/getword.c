@@ -28,12 +28,7 @@ int getword(char *w)
         return -1;
     }
 
-    /* Normal character; start of the word */
-    *w++ = (char) c;
-    i++;
-
-    while (true) {
-        c = getchar();
+    do {
         switch (c) {
             case '\t':
             case ' ':
@@ -42,6 +37,13 @@ int getword(char *w)
                 *w = '\0';
                 return i;
             case '\n':
+                /*
+                 * We want the next call to `getword` to see this newline. This
+                 * ensures that, if we have a word which is immediately
+                 * followed by a newline, the first call to `getword` would
+                 * return the word of interest and the next would return the
+                 * empty string for the newline.
+                 */
                 *w = '\0';
                 ungetc('\n', stdin);
                 return i;
@@ -54,7 +56,8 @@ int getword(char *w)
                     return i;
                 }
         }
-    }
+        c = getchar();
+    } while (true);
     /* This should not be reachable. If we get here, we have a problem */
     assert(false);
 }
