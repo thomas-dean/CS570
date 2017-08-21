@@ -18,6 +18,7 @@ int getword(char *w)
     int c;
     int i = 0;
 
+top:
     c = rmwhitespc();
     switch (c) {
         case '\n':
@@ -88,8 +89,8 @@ int getword(char *w)
                 /*
                  * We want to just take whatever the next character is verbatim.
                  *
-                 * If we encounter a new line, ignore it and continue reading
-                 * the current word. This permits commands ending in a back
+                 * If we encounter a new line, ignore it, clear white space
+                 * and get the next word. This permits commands ending in a back
                  * slash (\) to span multiple lines.
                  *
                  * If we encounter EOF, let the returned word be the single back
@@ -97,7 +98,7 @@ int getword(char *w)
                  */
                 c = getchar();
                 if (c == '\n') {
-                    continue;
+                    goto top;
                 }
                 if (c == EOF) {
                     c = '\\';

@@ -5,7 +5,7 @@
 
 #include "getword.h"
 
-#define NUM_INPUTS 8
+#define NUM_INPUTS 13
 
 static char* inputs[NUM_INPUTS] = {
     "foo bar baz bang",
@@ -15,7 +15,12 @@ static char* inputs[NUM_INPUTS] = {
     "	leading tab...	tabs in the middle...	",
     "that last one had a trailing tab",
     "this one has a new line...\n",
-    "Goodbye!"
+    "Goodbye!",
+    "Null&Void",
+    "Null\\&Void",
+    "Null\\ Void",
+    "continued on the next \\\n  line",
+    "Catch EOF with trailing \\"
 };
 
 static char* expected_words[NUM_INPUTS][8] = {
@@ -26,7 +31,12 @@ static char* expected_words[NUM_INPUTS][8] = {
     {"leading", "tab...", "tabs", "in", "the", "middle...", ""}, // 7
     {"that", "last", "one", "had", "a", "trailing", "tab", ""}, // 8
     {"this", "one", "has", "a", "new", "line...", "", ""}, // 8
-    {"Goodbye!", ""} // 2
+    {"Goodbye!", ""}, // 2
+    {"Null", "&", "Void", ""}, // 4
+    {"Null&Void", ""}, // 2
+    {"Null Void", ""}, // 2
+    {"continued", "on", "the", "next", "line", ""}, // 6
+    {"Catch", "EOF", "with", "trailing", "\\", ""} // 6
 };
 
 static int expected_counts[NUM_INPUTS][8] = {
@@ -37,11 +47,16 @@ static int expected_counts[NUM_INPUTS][8] = {
     {7, 6, 4, 2, 3, 9, -1},
     {4, 4, 3, 3, 1, 8, 3, -1},
     {4, 3, 3, 1, 3, 7, 0, -1},
-    {8, -1}
+    {8, -1},
+    {4, 1, 4, -1},
+    {9, -1},
+    {9, -1},
+    {9, 2, 3, 4, 4, -1},
+    {5, 3, 4, 8, 1, -1}
 };
 
 static uint32_t expected_calls[NUM_INPUTS] = {
-    5, 5, 5, 2, 7, 8, 8, 2
+    5, 5, 5, 2, 7, 8, 8, 2, 4, 2, 2, 6, 6
 };
 
 /*
