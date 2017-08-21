@@ -17,22 +17,23 @@ int getword(char *w)
 {
     int c;
     int i = 0;
+    char *p = w;
 
 top:
     c = rmwhitespc();
     switch (c) {
         case '\n':
-            *w = '\0';
+            *p = '\0';
             return 0;
         case EOF:
-            *w = '\0';
+            *p = '\0';
             return -1;
         case '<':
         case '|':
         case '#':
         case '&':
-            *w++ = (char) c;
-            *w = '\0';
+            *p++ = (char) c;
+            *p = '\0';
             return 1;
         case '>':
             /* ">" */
@@ -42,21 +43,21 @@ top:
                 c = getchar();
                 if (c == '&') {
                     /* ">>&" */
-                    strcpy(w, ">>&");
+                    strcpy(p, ">>&");
                     return 3;
                 }
                 ungetc(c, stdin);
-                strcpy(w, ">>");
+                strcpy(p, ">>");
                 return 2;
             }
             if (c == '&') {
                 /* ">&" */
-                strcpy(w, ">&");
+                strcpy(p, ">&");
                 return 2;
             }
             ungetc(c, stdin);
-            *w++ = '>';
-            *w = '\0';
+            *p++ = '>';
+            *p = '\0';
             return 1;
     }
 
@@ -66,8 +67,8 @@ top:
             case ' ':
             case EOF:
                 /* End of the word */
-                *w = '\0';
-                return i;
+                *p = '\0';
+                goto end;
             case '<':
             case '>': /* Handles ">", ">&", ">>" and ">>&" */
             case '|':
@@ -82,9 +83,9 @@ top:
                  * and the next would return the empty string for the newline /
                  * meta character.
                  */
-                *w = '\0';
+                *p = '\0';
                 ungetc(c, stdin);
-                return i;
+                goto end;
             case '\\':
                 /*
                  * We want to just take whatever the next character is verbatim.
@@ -105,18 +106,27 @@ top:
                 }
                 /* FALLTHROUGH */
             default:
-                *w++ = (char) c;
+                *p++ = (char) c;
                 i++;
-                if (__builtin_expect(i == STORAGE - 1, 0)) {
+                if (EXPECT_FALSE(i == STORAGE - 1)) {
                     /* We have run out of space in w buffer */
-                    *w = '\0';
+                    *p = '\0';
+                    /*
+                     * No need to test if the input is "logout" since the input
+                     * was more than 6 characters.
+                     *
+                     * This is based on the assumption that STORAGE != 7
+                     */
                     return i;
                 }
         }
         /* Get the next character, but always loop back */
     } while ((c = getchar()), true);
-    /* This should not be reachable. If we get here, we have a problem */
-    assert(false);
+end:
+    if (EXPECT_FALSE(strcmp(w, "logout") == 0)) {
+        return -1;
+    }
+    return i;
 }
 
 static int rmwhitespc(void) {

@@ -19,5 +19,7 @@
 
 #define STORAGE 255
 
+#define EXPECT_FALSE(x) __builtin_expect(x, 0)
+
 int getword(char *w);
 #endif
