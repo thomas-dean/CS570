@@ -2,8 +2,8 @@
 
 PROGRAM = p1
 TESTPROG = getword_test
-CC = gcc
-CFLAGS = -g
+CC = clang
+CFLAGS = -march=native -O2 -Os -Wall -Wextra -pedantic
 
 ${PROGRAM}:	getword.o ${PROGRAM}.o
 		${CC} -o ${PROGRAM} getword.o ${PROGRAM}.o
