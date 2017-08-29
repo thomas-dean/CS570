@@ -13,6 +13,8 @@
 #ifndef GETWORD_H
 #define GETWORD_H
 
+#include <assert.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
@@ -22,4 +24,5 @@
 #define EXPECT_FALSE(x) __builtin_expect(x, 0)
 
 int getword(char *w);
-#endif
+
+#endif /* GETWORD_H */

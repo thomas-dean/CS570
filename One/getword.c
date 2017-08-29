@@ -1,6 +1,3 @@
-#include <assert.h>
-#include <stdbool.h>
-
 #include "getword.h"
 
 /*
