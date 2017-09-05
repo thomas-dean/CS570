@@ -19,6 +19,7 @@ int getword(char *w)
 top:
     c = rmwhitespc();
     switch (c) {
+        case ';':
         case '\n':
             *p = '\0';
             return 0;
@@ -29,7 +30,6 @@ top:
         case '|':
         case '#':
         case '&':
-        case ';':
             *p++ = (char) c;
             *p = '\0';
             return 1;
@@ -81,6 +81,9 @@ top:
                  * If we encounter a new line, ignore it, clear white space
                  * and get the next word. This permits commands ending in a back
                  * slash (\) to span multiple lines.
+                 *
+                 * NOTE: We don't want to treat ';' and a new line the same in
+                 * this situation. Here we want the literal ';'.
                  *
                  * If we encounter EOF, let the returned word be the single back
                  * slash (\).
