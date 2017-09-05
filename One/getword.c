@@ -35,15 +35,16 @@ top:
             return 1;
         case '>':
             /* ">" */
+            *p++ = '>';
             c = getchar();
             if (c == '!') {
                 /* ">!" */
-                strcpy(p, ">!");
+                *p++ = '!';
+                *p = '\0';
                 return 2;
             }
             /* ">" and some other character... */
             ungetc(c, stdin);
-            *p++ = '>';
             *p = '\0';
             return 1;
     }
