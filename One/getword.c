@@ -29,29 +29,19 @@ top:
         case '|':
         case '#':
         case '&':
+        case ';':
             *p++ = (char) c;
             *p = '\0';
             return 1;
         case '>':
             /* ">" */
             c = getchar();
-            if (c == '>') {
-                /* ">>" */
-                c = getchar();
-                if (c == '&') {
-                    /* ">>&" */
-                    strcpy(p, ">>&");
-                    return 3;
-                }
-                ungetc(c, stdin);
-                strcpy(p, ">>");
+            if (c == '!') {
+                /* ">!" */
+                strcpy(p, ">!");
                 return 2;
             }
-            if (c == '&') {
-                /* ">&" */
-                strcpy(p, ">&");
-                return 2;
-            }
+            /* ">" and some other character... */
             ungetc(c, stdin);
             *p++ = '>';
             *p = '\0';
@@ -71,6 +61,7 @@ top:
             case '|':
             case '#':
             case '&':
+            case ';':
             case '\n':
                 /*
                  * We want the next call to `getword` to see this newline /
