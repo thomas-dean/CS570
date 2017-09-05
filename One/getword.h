@@ -13,7 +13,6 @@
 #ifndef GETWORD_H
 #define GETWORD_H
 
-#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
