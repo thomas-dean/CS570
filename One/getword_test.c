@@ -5,7 +5,7 @@
 
 #include "getword.h"
 
-#define NUM_INPUTS 16
+#define NUM_INPUTS 17
 
 static char* inputs[NUM_INPUTS] = {
     "foo bar baz bang",
@@ -23,7 +23,8 @@ static char* inputs[NUM_INPUTS] = {
     "Catch EOF with trailing \\",
     "foo logout",
     "test with;semicolon",
-    "test with ' embedded spaces in 'single quotes"
+    "test with ' embedded spaces in 'single quotes",
+    "test with ' space after ' single quotes"
 };
 
 static char* expected_words[NUM_INPUTS][8] = {
@@ -42,7 +43,8 @@ static char* expected_words[NUM_INPUTS][8] = {
     {"Catch", "EOF", "with", "trailing", "\\", ""}, // 6
     {"foo", "logout", ""}, // 3
     {"test", "with", "", "semicolon", ""}, // 5
-    {"test", "with", " embedded spaces in single", "quotes", ""} // 5
+    {"test", "with", " embedded spaces in single", "quotes", ""}, // 5
+    {"test", "with", " space after ", "single", "quotes", ""} // 6
 };
 
 static int expected_counts[NUM_INPUTS][8] = {
@@ -61,11 +63,12 @@ static int expected_counts[NUM_INPUTS][8] = {
     {5, 3, 4, 8, 1, -1},
     {3, -1, -1},
     {4, 4, 0, 9, -1},
-    {4, 4, 26, 6, -1}
+    {4, 4, 26, 6, -1},
+    {4, 4, 13, 6, 6, -1}
 };
 
 static uint32_t expected_calls[NUM_INPUTS] = {
-    5, 5, 5, 2, 7, 8, 8, 2, 4, 2, 2, 6, 6, 3, 5, 5
+    5, 5, 5, 2, 7, 8, 8, 2, 4, 2, 2, 6, 6, 3, 5, 5, 6
 };
 
 /*

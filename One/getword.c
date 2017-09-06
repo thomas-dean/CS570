@@ -106,6 +106,7 @@ top:
                         return i;
                     }
                 }
+                break;
             case '\\':
                 /*
                  * We want to just take whatever the next character is verbatim.
