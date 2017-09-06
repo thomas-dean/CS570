@@ -75,6 +75,37 @@ top:
                 *p = '\0';
                 ungetc(c, stdin);
                 goto end;
+            case '\'':
+                while (true) {
+                    c = getchar();
+                    if (c == '\'') {
+                        /* We have encountered a closing quote */
+                        break;
+                    }
+                    if (c == EOF) {
+                        /* Encountered EOF when inside a quote */
+                        fprintf(stderr, "Encountered EOF while parsing literal\n");
+                        *p = '\0';
+                        return i;
+                    }
+                    if (c == '\\') {
+                        int c1 = getchar();
+                        if (c1 == '\'') {
+                            /* "\'" => "'" */
+                            c = '\'';
+                        } else {
+                            /* "\" and some other character... */
+                            ungetc(c1, stdin);
+                        }
+                    }
+                    *p++ = (char) c;
+                    i++;
+                    if (EXPECT_FALSE(i == STORAGE - 1)) {
+                        /* We have run out of space in w buffer */
+                        *p = '\0';
+                        return i;
+                    }
+                }
             case '\\':
                 /*
                  * We want to just take whatever the next character is verbatim.
