@@ -1,4 +1,4 @@
-# A Makefile for Program 0, CS570
+# A Makefile for Program 1, CS570
 
 PROGRAM = p1
 TESTPROG = getword_test
