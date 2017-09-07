@@ -84,9 +84,9 @@ top:
                     }
                     if (c == EOF) {
                         /* Encountered EOF when inside a quote */
-                        fprintf(stderr, "Encountered EOF while parsing literal\n");
+                        /* This will be an error in a later program */
                         *p = '\0';
-                        return i;
+                        goto end;
                     }
                     if (c == '\\') {
                         int c1 = getchar();
