@@ -28,7 +28,6 @@ top:
             return -1;
         case '<':
         case '|':
-        case '#':
         case '&':
             *p++ = (char) c;
             *p = '\0';
@@ -58,9 +57,8 @@ top:
                 *p = '\0';
                 goto end;
             case '<':
-            case '>': /* Handles ">", ">&", ">>" and ">>&" */
+            case '>':
             case '|':
-            case '#':
             case '&':
             case ';':
             case '\n':
