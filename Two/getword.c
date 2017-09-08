@@ -82,9 +82,8 @@ top:
                     }
                     if (c == EOF) {
                         /* Encountered EOF when inside a quote */
-                        /* This will be an error in a later program */
                         *p = '\0';
-                        goto end;
+                        return ENOMATCH;
                     }
                     if (c == '\\') {
                         int c1 = getchar();
