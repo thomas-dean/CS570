@@ -19,7 +19,7 @@
 #include <strings.h>
 
 #define STORAGE 255
-#define ENOMATCH -2
+#define ENOMATCH (-2)
 
 #define EXPECT_FALSE(x) __builtin_expect(x, 0)
 

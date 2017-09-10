@@ -1,7 +1,7 @@
 *.o
 *.swp
 *.core
-p1
+p2
 getword_test
 tags
 cscope.*out
