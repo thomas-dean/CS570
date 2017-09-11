@@ -1,6 +1,6 @@
 #include "cd.h"
 
-int cd(char *dir)
+int cd(const char *dir)
 {
     if (chdir(dir) == -1) {
         return ECHDIR;

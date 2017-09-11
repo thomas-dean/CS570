@@ -1,6 +1,6 @@
 #include "ls.h"
 
-int ls(FILE *stream, char *dir)
+int ls(FILE *stream, const char *dir)
 {
     DIR *entry;
     struct dirent *dp;

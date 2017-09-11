@@ -14,6 +14,6 @@
  * files in the directory, or < 0 on error. See errno for which error was
  * encountered.
  */
-int ls (FILE *stream, char *dir);
+int ls (FILE *stream, const char *dir);
 
 #endif /* LS_H */

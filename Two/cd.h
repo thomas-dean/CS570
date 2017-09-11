@@ -9,6 +9,6 @@
  * Change the processes current directory. Returns < 0 on error. See errno for
  * which error was encountered.
  */
-int cd(char *dir);
+int cd(const char *dir);
 
 #endif /* CD_H */
