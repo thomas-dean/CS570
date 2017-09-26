@@ -3,7 +3,7 @@
 /*
  * Spawn the previous executable in the pipeline
  *
- * Only returns if you pass NULL as currchild.
+ * Only returns if you pass a currchild without a next child in the list.
  * Spawns child pointed to by currchild.
  *
  * Assumes that the process has already setup its own stdout.
@@ -96,7 +96,7 @@ static void execchild(child_t *currchild)
     pid_t cpid;
     int pipefds[2];
 
-    if (currchild == NULL) {
+    if (currchild->next == NULL) {
         return;
     }
 
@@ -126,8 +126,8 @@ static void execchild(child_t *currchild)
         /* If we get this far, we are the first executable in the pipeline */
         dup2(cstdinfd, STDIN_FILENO);
         closecfds();
-        execvp(currchild->buf, currchild->childargv);
-        perror(currchild->buf);
+        execvp(currchild->next->buf, currchild->next->childargv);
+        perror(currchild->next->buf);
         exit(9);
     }
 }
