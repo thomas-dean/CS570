@@ -1,29 +1,26 @@
 # A Makefile for Program 2, CS570
 
 PROGRAM = p2
-TESTPROG = getword_test
 CC = clang
-CFLAGS = -march=native -O2 -Os -Wall -Wextra -pedantic
+CFLAGS = -march=native -O2 -Os -Wall -Wextra -Weverything -pedantic
 
-${PROGRAM}:	getword.o ${PROGRAM}.o
-		${CC} -o ${PROGRAM} getword.o ${PROGRAM}.o
+${PROGRAM}:	exec.o redir.o parse.o getword.o ${PROGRAM}.o
+		${CC} -o ${PROGRAM} exec.o redir.o parse.o getword.o ${PROGRAM}.o
 
-${TESTPROG}:	getword.o ${TESTPROG}.o
-		${CC} -o ${TESTPROG} getword.o ${TESTPROG}.o
+${PROGRAM}.o:	parse.h exec.h
 
-${TESTPROG}.o:	getword.h
+parse.o:	getword.o parse.h
 
-${PROGRAM}.o:	getword.h
+redir.o:	redir.h
+
+exec.o:		parse.h redir.h exec.h
 
 getword.o:	getword.h
 
 clean:
-		rm -f *.o *.core ${PROGRAM} ${TESTPROG}
+		rm -f *.o *.core ${PROGRAM}
 
-test:		${TESTPROG}
-		./${TESTPROG}
-
-tags:		getword.c ${PROGRAM}.c makefile getword.h ${TESTPROG}.c
+tags:		exec.c redir.c getword.c parse.c ${PROGRAM}.c makefile getword.h parse.h redir.h exec.h
 		exctags -R --fields=+S --c-kinds=+defgmstux
 
 lint:

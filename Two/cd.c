@@ -1,7 +1,9 @@
 #include "cd.h"
 
-int cd(const char *dir)
-{
+int cd(char *dir) {
+    if (dir == NULL) {
+        dir = getenv("HOME");
+    }
     if (chdir(dir) == -1) {
         return ECHDIR;
     }

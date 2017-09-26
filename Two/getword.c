@@ -85,6 +85,11 @@ top:
                         *p = '\0';
                         return ENOMATCH;
                     }
+                    if (c == '\n') {
+                        /* Encounted a new line when inside a quote */
+                        *p = '\0';
+                        return ENOMATCH;
+                    }
                     if (c == '\\') {
                         int c1 = getchar();
                         if (c1 == '\'') {
