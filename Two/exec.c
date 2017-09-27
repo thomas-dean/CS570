@@ -20,13 +20,13 @@ static bool isbuiltin(char *exename);
 /*
  * Runs the builtin command `child`
  */
-static void runbuiltin(child_t *child);
+static int runbuiltin(child_t *child);
 
 void execcmd(cmd_t *cmd)
 {
     child_t *lastchild;
     char *infile, *outfile;
-    int cstatus;
+    int cstatus, realstdout;
     pid_t cpid;
 
     infile = cmd->cmdstdin[0] == '\0' ? NULL : cmd->cmdstdin;
@@ -54,7 +54,14 @@ void execcmd(cmd_t *cmd)
      * pipeline
      */
     if (isbuiltin(lastchild->buf)) {
+        /*
+         * Save our stdout to a different fd. It will be overwritten for the
+         * builtin
+         */
+        realstdout = dup(STDOUT_FILENO);
+        dup2(cstdoutfd, STDOUT_FILENO);
         runbuiltin(lastchild);
+        dup2(realstdout, STDOUT_FILENO);
         return;
     }
 
@@ -114,6 +121,17 @@ static void execchild(child_t *currchild)
         return;
     }
 
+    if (isbuiltin(currchild->buf)) {
+        /*
+         * NOTE: If we get to this point we are going to stop executing the
+         * pipeline and just run the builtin as if it was the first executable
+         * in the pipline. This means any executables before this builtin will
+         * not be run
+         */
+        /* We are a forked child, so its OK for us to die */
+        exit(runbuiltin(currchild));
+    }
+
     pipe(pipefds);
     cpid = fork();
     if (cpid < 0) {
@@ -140,6 +158,9 @@ static void execchild(child_t *currchild)
         /* If we get this far, we are the first executable in the pipeline */
         dup2(cstdinfd, STDIN_FILENO);
         closecfds();
+        if (isbuiltin(currchild->next->buf)) {
+            exit(runbuiltin(currchild->next));
+        }
         execvp(currchild->next->buf, currchild->next->childargv);
         perror(currchild->next->buf);
         exit(9);
@@ -184,7 +205,7 @@ static bool isbuiltin(char *exename)
     return false;
 }
 
-static void runbuiltin(child_t *child)
+static int runbuiltin(child_t *child)
 {
     int argc;
 
@@ -195,14 +216,15 @@ static void runbuiltin(child_t *child)
         if (argc > 2) {
             fprintf(stderr, "Too many arguments to cd\n");
         }
-        cd(child->childargv[1]);
+        return cd(child->childargv[1]);
     } else if (strcmp(child->buf, "ls-F") == 0) {
         if (argc > 2) {
             fprintf(stderr, "Too many arguments to ls-F\n");
         }
         /* XXX: Change this to wherever we are supposed to write output */
-        ls(STDOUT_FILENO, child->childargv[1]);
+        return ls(STDOUT_FILENO, child->childargv[1]);
     } else {
         fprintf(stderr, "Internal error: failed to find builtin for %s\n", child->buf);
+        return -1;
     }
 }
