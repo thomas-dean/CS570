@@ -1,6 +1,7 @@
 #ifndef EXEC_H
 #define EXEC_H
 
+#include "builtins.h"
 #include "parse.h"
 #include "redir.h"
 

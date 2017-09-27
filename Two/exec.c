@@ -16,6 +16,11 @@ static void execchild(child_t *currchild);
  */
 static void reverse(child_t **head);
 static void reverse_helper(child_t *curr, child_t *prev, child_t **head);
+static bool isbuiltin(char *exename);
+/*
+ * Runs the builtin command `child`
+ */
+static void runbuiltin(child_t *child);
 
 void execcmd(cmd_t *cmd)
 {
@@ -43,6 +48,15 @@ void execcmd(cmd_t *cmd)
      */
     lastchild = &cmd->fstchild;
     reverse(&lastchild);
+
+    /*
+     * No need to fork if we are running a builtin command which is not in a
+     * pipeline
+     */
+    if (isbuiltin(lastchild->buf)) {
+        runbuiltin(lastchild);
+        return;
+    }
 
     /*
      * Now we fork off our first child (the last executable in the pipeline.
@@ -151,4 +165,44 @@ static void reverse_helper(child_t *curr, child_t *prev, child_t **head)
     child_t *next = curr->next;
     curr->next = prev;
     reverse_helper(next, curr, head);
+}
+
+static bool isbuiltin(char *exename)
+{
+    static char *builtins[] = {
+        "cd",
+        "ls-F",
+        NULL
+    };
+    char **bp;
+
+    for (bp = builtins; *bp; ++bp) {
+        if (strcmp(*bp, exename) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void runbuiltin(child_t *child)
+{
+    int argc;
+
+    for (argc = 0; child->childargv[argc]; ++argc) {
+        ;
+    }
+    if (strcmp(child->buf, "cd") == 0) {
+        if (argc > 2) {
+            fprintf(stderr, "Too many arguments to cd\n");
+        }
+        cd(child->childargv[1]);
+    } else if (strcmp(child->buf, "ls-F") == 0) {
+        if (argc > 2) {
+            fprintf(stderr, "Too many arguments to ls-F\n");
+        }
+        /* XXX: Change this to wherever we are supposed to write output */
+        ls(STDOUT_FILENO, child->childargv[1]);
+    } else {
+        fprintf(stderr, "Internal error: failed to find builtin for %s\n", child->buf);
+    }
 }
