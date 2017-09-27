@@ -2,9 +2,10 @@
 #define PARSE_H
 
 #include "getword.h"
+
+#include <dirent.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <dirent.h>
 
 #define MAXITEM 100
 #define MAXCMD 2

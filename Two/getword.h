@@ -19,10 +19,22 @@
 #include <strings.h>
 
 #define STORAGE 255
-#define ENOMATCH (-2)
 
 #define EXPECT_FALSE(x) __builtin_expect(x, 0)
 
-int getword(char *w);
+typedef enum {
+    tok_errnomatch,
+    tok_eof,
+    tok_newline,
+    tok_semi,
+    tok_gt,
+    tok_gtbang,
+    tok_lt,
+    tok_pipe,
+    tok_amp,
+    tok_word
+} token_t;
+
+token_t getword(char *w);
 
 #endif /* GETWORD_H */

@@ -10,7 +10,7 @@
  */
 static int rmwhitespc(void);
 
-int getword(char *w)
+token_t getword(char *w)
 {
     int c;
     int i = 0;
@@ -20,18 +20,26 @@ top:
     c = rmwhitespc();
     switch (c) {
         case ';':
+            *p = '\0';
+            return tok_semi;
         case '\n':
             *p = '\0';
-            return 0;
+            return tok_newline;
         case EOF:
             *p = '\0';
-            return -1;
+            return tok_eof;
         case '<':
+            *p++ = (char) c;
+            *p = '\0';
+            return tok_lt;
         case '|':
+            *p++ = (char) c;
+            *p = '\0';
+            return tok_pipe;
         case '&':
             *p++ = (char) c;
             *p = '\0';
-            return 1;
+            return tok_amp;
         case '>':
             /* ">" */
             *p++ = '>';
@@ -40,12 +48,12 @@ top:
                 /* ">!" */
                 *p++ = '!';
                 *p = '\0';
-                return 2;
+                return tok_gtbang;
             }
             /* ">" and some other character... */
             ungetc(c, stdin);
             *p = '\0';
-            return 1;
+            return tok_gt;
     }
 
     do {
@@ -83,12 +91,12 @@ top:
                     if (c == EOF) {
                         /* Encountered EOF when inside a quote */
                         *p = '\0';
-                        return ENOMATCH;
+                        return tok_errnomatch;
                     }
                     if (c == '\n') {
                         /* Encounted a new line when inside a quote */
                         *p = '\0';
-                        return ENOMATCH;
+                        return tok_errnomatch;
                     }
                     if (c == '\\') {
                         int c1 = getchar();
@@ -105,7 +113,7 @@ top:
                     if (EXPECT_FALSE(i == STORAGE - 1)) {
                         /* We have run out of space in w buffer */
                         *p = '\0';
-                        return i;
+                        return tok_word;
                     }
                 }
                 break;
@@ -143,16 +151,16 @@ top:
                      *
                      * This is based on the assumption that STORAGE != 7
                      */
-                    return i;
+                    return tok_word;
                 }
         }
         /* Get the next character, but always loop back */
     } while ((c = getchar()), true);
 end:
     if (EXPECT_FALSE(strcmp(w, "logout") == 0)) {
-        return -1;
+        return tok_eof;
     }
-    return i;
+    return tok_word;
 }
 
 static int rmwhitespc(void) {

@@ -217,14 +217,14 @@ static int runbuiltin(child_t *child)
             fprintf(stderr, "Too many arguments to cd\n");
         }
         return cd(child->childargv[1]);
-    } else if (strcmp(child->buf, "ls-F") == 0) {
+    }
+    if (strcmp(child->buf, "ls-F") == 0) {
         if (argc > 2) {
             fprintf(stderr, "Too many arguments to ls-F\n");
         }
-        /* XXX: Change this to wherever we are supposed to write output */
+        /* We have already setup stdout for redirection */
         return ls(STDOUT_FILENO, child->childargv[1]);
-    } else {
-        fprintf(stderr, "Internal error: failed to find builtin for %s\n", child->buf);
-        return -1;
     }
+    fprintf(stderr, "Internal error: failed to find builtin for %s\n", child->buf);
+    return -1;
 }

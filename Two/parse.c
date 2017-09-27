@@ -17,7 +17,7 @@ cmd_t *parse(void)
     char buf[STORAGE];
     char *p;
     char **currarg;
-    int rc;
+    token_t rc;
 
     if ((cmd = newcmd()) == NULL) {
         /* Failed to allocate struct */
@@ -30,22 +30,22 @@ cmd_t *parse(void)
     currarg = currchild->childargv;
     while (true) {
         rc = getword(buf);
-        if (rc == ENOMATCH) {
+        if (rc == tok_errnomatch) {
             parseerrno = noquote;
             cmdfree(cmd);
             return NULL;
         }
-        if (rc == 0) {
+        if (rc == tok_newline || rc == tok_semi) {
             *currarg = NULL;
             break;
         }
-        if (rc == -1) {
+        if (rc == tok_eof) {
             cmd->foundeof = true;
             *currarg = NULL;
             break;
         }
         /* Handle meta characters... */
-        if (strncmp(buf, "|", 1) == 0) {
+        if (rc == tok_pipe) {
             if (currchild->buf[0] == '\0') {
                 parseerrno = nocmd;
                 cmdfree(cmd);
@@ -64,17 +64,17 @@ cmd_t *parse(void)
             currarg = currchild->childargv;
             continue;
         }
-        if (strncmp(buf, "&", 1) == 0) {
+        if (rc == tok_amp) {
             cmd->runinbg = true;
             strncpy(cmd->cmdstdin, "/dev/null", STORAGE);
             *currarg = NULL;
             return cmd;
         }
-        if (strncmp(buf, ">!", 2) == 0) {
+        if (rc == tok_gtbang == 0) {
             cmd->clobber = true;
             /* FALLTHROUGH to the following if block */
         }
-        if (strncmp(buf, ">", 1) == 0) {
+        if (rc == tok_gt) {
             if (cmd->cmdstdout[0] != '\0') {
                 /* We have already redirected stdout! */
                 parseerrno = dupredir;
@@ -90,7 +90,7 @@ cmd_t *parse(void)
             stdoutredirchild = currchild;
             continue;
         }
-        if (strncmp(buf, "<", 1) == 0) {
+        if (rc == tok_lt) {
             if (cmd->cmdstdin[0] != '\0') {
                 /* We have already redirected stdin! */
                 parseerrno = dupredir;
@@ -107,6 +107,13 @@ cmd_t *parse(void)
             continue;
         }
         /* Handle a regular word... */
+        if (rc != tok_word) {
+            fprintf(stderr, "Encounted unknown token type\n");
+            parseerrno = nocmd; /* TODO: use a value that makes sense */
+            cmdfree(cmd);
+            flushline();
+            return NULL;
+        }
         if (currarg - currchild->childargv == MAXITEM - 1) {
             /* we have run out of space in the argument vector */
             /* Running the command with too few arguments could lead to
@@ -118,7 +125,7 @@ cmd_t *parse(void)
         }
         strncpy(p, buf, STORAGE);
         *currarg++ = p;
-        p += rc + 1; /* Move p passed the word and the null terminator */
+        p += strlen(buf) + 1; /* Move p passed the word and the null terminator */
     }
 
     /* ============== Sanity checks ============== */
@@ -243,16 +250,15 @@ static child_t *newchild(void)
 static char *readfilename(char *dst)
 {
     char buf[STORAGE];
-    int rc;
+    token_t rc;
 
     rc = getword(buf);
-    if (rc == 0 || rc == -1) {
+    if (rc == tok_newline || rc == tok_semi || rc == tok_eof) {
         parseerrno = nofile;
         return NULL;
     }
-    if (strncmp(buf, "|", 1) == 0 || strncmp(buf, "<", 1) == 0
-        || strncmp(buf, ">", 1) == 0 || strncmp(buf, "&", 1) == 0
-        || strncmp(buf, ">!", 2) == 0) {
+    if (rc == tok_pipe || rc == tok_lt || rc == tok_gt || rc == tok_amp
+        || rc == tok_gtbang == 0) {
         parseerrno = badfile;
         return NULL;
     }
@@ -262,8 +268,9 @@ static char *readfilename(char *dst)
 static void flushline(void)
 {
     char buf[STORAGE];
+    token_t rc;
 
-    while (getword(buf) > 0 && strcmp(buf, "&") != 0) {
+    while ((rc = getword(buf)) != tok_newline && rc != tok_amp) {
         ;
     }
 }
