@@ -48,21 +48,30 @@ static int ls(const char *dir)
 {
     DIR *entry;
     struct dirent *dp;
-    FILE *stream;
+    struct stat sb;
 
     if (dir == NULL) {
         dir = ".";
     }
-    if ((entry = opendir(dir)) == NULL) {
+    if (stat(dir, &sb) == -1) {
         perror(dir);
         return EOPEN;
     }
-    while ((dp = readdir(entry)) != NULL) {
-        printf("%s\n", dp->d_name);
-    }
-    if (closedir(entry) == -1) {
-        perror("closedir");
-        return ECLOSE;
+    if (S_ISDIR(sb.st_mode)) {
+        if ((entry = opendir(dir)) == NULL) {
+            perror(dir);
+            return EOPEN;
+        }
+        while ((dp = readdir(entry)) != NULL) {
+            printf("%s\n", dp->d_name);
+        }
+        if (closedir(entry) == -1) {
+            perror("closedir");
+            return ECLOSE;
+        }
+    } else {
+        /* stat succeeded + a non-directory -> just print the filename */
+        printf("%s\n", dir);
     }
     return 0;
 }
