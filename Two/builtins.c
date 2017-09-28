@@ -1,6 +1,12 @@
 #include "builtins.h"
 
-int ls(int outfd, const char *dir)
+static char *builtins[] = {
+    "ls-F",
+    "cd",
+    NULL
+};
+
+static int ls(int outfd, const char *dir)
 {
     DIR *entry;
     struct dirent *dp;
@@ -42,7 +48,7 @@ int ls(int outfd, const char *dir)
     return i;
 }
 
-int cd(char *dir) {
+static int cd(char *dir) {
     if (dir == NULL) {
         dir = getenv("HOME");
     }
@@ -51,4 +57,40 @@ int cd(char *dir) {
         return ECHDIR;
     }
     return 0;
+}
+
+bool isbuiltin(char *exename)
+{
+    char **bp;
+
+    for (bp = builtins; *bp; ++bp) {
+        if (strcmp(*bp, exename) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+int runbuiltin(child_t *child)
+{
+    int argc;
+
+    for (argc = 0; child->childargv[argc]; ++argc) {
+        ;
+    }
+    if (strcmp(child->buf, "cd") == 0) {
+        if (argc > 2) {
+            fprintf(stderr, "Too many arguments to cd\n");
+        }
+        return cd(child->childargv[1]);
+    }
+    if (strcmp(child->buf, "ls-F") == 0) {
+        if (argc > 2) {
+            fprintf(stderr, "Too many arguments to ls-F\n");
+        }
+        /* We have already setup stdout for redirection */
+        return ls(STDOUT_FILENO, child->childargv[1]);
+    }
+    fprintf(stderr, "Internal error: failed to find builtin for %s\n", child->buf);
+    return -1;
 }

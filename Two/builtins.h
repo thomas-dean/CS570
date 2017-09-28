@@ -1,6 +1,8 @@
 #ifndef BUILTINS_H
 #define BUILTINS_H
 
+#include "parse.h"
+
 #include <dirent.h>
 #include <errno.h>
 #include <stdio.h>
@@ -13,15 +15,14 @@
 #define ECHDIR (-1)
 
 /*
- * Prints the contents of the directory `dir` to file descriptor `outfd`.
- * Returns the number of files in the directory, or < 0 on error.
+ * Returns true if the executable name `exename` is a builtin command.
+ * Otherwise, it returns false
  */
-int ls (int outfd, const char *dir);
+bool isbuiltin(char *exename);
 
 /*
- * Change the processes current directory. Returns < 0 on error. See errno for
- * which error was encountered.
+ * Runs the builtin command `child`. Returns 0 on success; < 0 on failure.
  */
-int cd(char *dir);
+int runbuiltin(child_t *child);
 
 #endif /* BUILTINS_H */

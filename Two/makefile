@@ -15,7 +15,7 @@ redir.o:	redir.h
 
 exec.o:		parse.h redir.h exec.h builtins.h
 
-builtins.o:	builtins.h
+builtins.o:	builtins.h parse.h
 
 getword.o:	getword.h
 

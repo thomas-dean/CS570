@@ -16,11 +16,6 @@ static void execchild(child_t *currchild);
  */
 static void reverse(child_t **head);
 static void reverse_helper(child_t *curr, child_t *prev, child_t **head);
-static bool isbuiltin(char *exename);
-/*
- * Runs the builtin command `child`
- */
-static int runbuiltin(child_t *child);
 
 void execcmd(cmd_t *cmd)
 {
@@ -188,43 +183,3 @@ static void reverse_helper(child_t *curr, child_t *prev, child_t **head)
     reverse_helper(next, curr, head);
 }
 
-static bool isbuiltin(char *exename)
-{
-    static char *builtins[] = {
-        "cd",
-        "ls-F",
-        NULL
-    };
-    char **bp;
-
-    for (bp = builtins; *bp; ++bp) {
-        if (strcmp(*bp, exename) == 0) {
-            return true;
-        }
-    }
-    return false;
-}
-
-static int runbuiltin(child_t *child)
-{
-    int argc;
-
-    for (argc = 0; child->childargv[argc]; ++argc) {
-        ;
-    }
-    if (strcmp(child->buf, "cd") == 0) {
-        if (argc > 2) {
-            fprintf(stderr, "Too many arguments to cd\n");
-        }
-        return cd(child->childargv[1]);
-    }
-    if (strcmp(child->buf, "ls-F") == 0) {
-        if (argc > 2) {
-            fprintf(stderr, "Too many arguments to ls-F\n");
-        }
-        /* We have already setup stdout for redirection */
-        return ls(STDOUT_FILENO, child->childargv[1]);
-    }
-    fprintf(stderr, "Internal error: failed to find builtin for %s\n", child->buf);
-    return -1;
-}
