@@ -6,58 +6,8 @@ static char *builtins[] = {
     NULL
 };
 
-static int ls(int outfd, const char *dir)
-{
-    DIR *entry;
-    struct dirent *dp;
-    int outcp, i;
-    FILE *stream;
-
-    if (dir == NULL) {
-        dir = ".";
-    }
-    if ((outcp = dup(outfd)) == -1) {
-        perror("dup");
-        return EOPEN;
-    }
-    if ((stream = fdopen(outcp, "w")) == NULL)  {
-        perror("fdopen");
-        if (close(outcp) == -1) {
-            perror("close");
-            return ECLOSE;
-        }
-        return EOPEN;
-    }
-    if ((entry = opendir(dir)) == NULL) {
-        perror(dir);
-        return EOPEN;
-    }
-    i = 0;
-    while ((dp = readdir(entry)) != NULL) {
-        fprintf(stream, "%s\n", dp->d_name);
-        ++i;
-    }
-    if (closedir(entry) == -1) {
-        perror("closedir");
-        return ECLOSE;
-    }
-    if (fclose(stream) != 0) {
-        perror("fclose");
-        return ECLOSE;
-    }
-    return i;
-}
-
-static int cd(char *dir) {
-    if (dir == NULL) {
-        dir = getenv("HOME");
-    }
-    if (chdir(dir) == -1) {
-        perror(dir);
-        return ECHDIR;
-    }
-    return 0;
-}
+static int ls(const char *dir);
+static int cd(char *dir);
 
 bool isbuiltin(char *exename)
 {
@@ -88,9 +38,46 @@ int runbuiltin(child_t *child)
         if (argc > 2) {
             fprintf(stderr, "Too many arguments to ls-F\n");
         }
-        /* We have already setup stdout for redirection */
-        return ls(STDOUT_FILENO, child->childargv[1]);
+        return ls(child->childargv[1]);
     }
     fprintf(stderr, "Internal error: failed to find builtin for %s\n", child->buf);
     return -1;
+}
+
+static int ls(const char *dir)
+{
+    DIR *entry;
+    struct dirent *dp;
+    FILE *stream;
+
+    if (dir == NULL) {
+        dir = ".";
+    }
+    if ((entry = opendir(dir)) == NULL) {
+        perror(dir);
+        return EOPEN;
+    }
+    while ((dp = readdir(entry)) != NULL) {
+        printf("%s\n", dp->d_name);
+    }
+    if (closedir(entry) == -1) {
+        perror("closedir");
+        return ECLOSE;
+    }
+    return 0;
+}
+
+static int cd(char *dir) {
+    if (dir == NULL) {
+        dir = getenv("HOME");
+        if (!dir) {
+            fprintf(stderr, "Could not find environment variable $HOME\n");
+            return ECHDIR;
+        }
+    }
+    if (chdir(dir) == -1) {
+        perror(dir);
+        return ECHDIR;
+    }
+    return 0;
 }

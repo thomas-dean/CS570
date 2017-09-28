@@ -70,7 +70,7 @@ cmd_t *parse(void)
             *currarg = NULL;
             return cmd;
         }
-        if (rc == tok_gtbang == 0) {
+        if (rc == tok_gtbang) {
             cmd->clobber = true;
             /* FALLTHROUGH to the following if block */
         }
@@ -258,7 +258,7 @@ static char *readfilename(char *dst)
         return NULL;
     }
     if (rc == tok_pipe || rc == tok_lt || rc == tok_gt || rc == tok_amp
-        || rc == tok_gtbang == 0) {
+        || rc == tok_gtbang) {
         parseerrno = badfile;
         return NULL;
     }
