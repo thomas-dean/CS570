@@ -3,8 +3,6 @@
 
 #include <signal.h>
 
-#define PGID 1234321
-
 static void sigsetup(void);
 #ifdef DEBUG
 static void printcmddebug(cmd_t *cmd);
@@ -59,7 +57,7 @@ static void sigsetup(void)
     sighandle.sa_flags = SA_RESTART;
     sighandle.sa_handler = SIG_IGN;
 
-    setpgid(0, PGID);
+    setpgid(0, getpid());
     if (sigaction(SIGTERM, &sighandle, NULL) < 0) {
         perror("sigaction");
         exit(1);
