@@ -11,6 +11,7 @@
  * This will recursively spawn all children in the pipe
  */
 static void execchild(child_t *currchild);
+
 /*
  * Reverse the linked list of children pointed to by head
  */
@@ -27,6 +28,7 @@ void execcmd(cmd_t *cmd)
     infile = cmd->cmdstdin[0] == '\0' ? NULL : cmd->cmdstdin;
     outfile = cmd->cmdstdout[0] == '\0' ? NULL : cmd->cmdstdout;
     if (!mkredirects(infile, outfile, cmd->clobber)) {
+        /* Failed to create redirects */
         return;
     }
 
@@ -53,10 +55,19 @@ void execcmd(cmd_t *cmd)
          * Save our stdout to a different fd. It will be overwritten for the
          * builtin
          */
-        realstdout = dup(STDOUT_FILENO);
-        dup2(cstdoutfd, STDOUT_FILENO);
+        if ((realstdout = dup(STDOUT_FILENO)) == -1) {
+            perror("dup");
+            return;
+        }
+        if (dup2(cstdoutfd, STDOUT_FILENO) == -1) {
+            perror("dup2");
+            return;
+        }
         runbuiltin(lastchild);
-        dup2(realstdout, STDOUT_FILENO);
+        if (dup2(realstdout, STDOUT_FILENO) == -1) {
+            perror("dup2");
+            return;
+        }
         return;
     }
 
@@ -85,13 +96,19 @@ void execcmd(cmd_t *cmd)
         /*
          * The first child should setup the stdout redirection for the command.
          */
-        dup2(cstdoutfd, STDOUT_FILENO);
+        if (dup2(cstdoutfd, STDOUT_FILENO) == -1) {
+            perror("dup2");
+            exit(9);
+        }
 
         if (lastchild->next == NULL) {
             /* Simple command; no pipeline */
 
             /* Redirect stdin */
-            dup2(cstdinfd, STDIN_FILENO);
+            if (dup2(cstdinfd, STDIN_FILENO) == -1) {
+                perror("dup2");
+                exit(9);
+            }
             closecfds();
             execvp(lastchild->buf, lastchild->childargv);
             perror(lastchild->buf);
@@ -127,7 +144,10 @@ static void execchild(child_t *currchild)
         exit(runbuiltin(currchild));
     }
 
-    pipe(pipefds);
+    if (pipe(pipefds) == -1) {
+        perror("pipe");
+        exit(9);
+    }
     cpid = fork();
     if (cpid < 0) {
         perror("fork");
@@ -135,9 +155,18 @@ static void execchild(child_t *currchild)
     }
     if (cpid > 0) {
         /* Setup pipe */
-        close(pipefds[1]);
-        dup2(pipefds[0], STDIN_FILENO);
-        close(pipefds[0]);
+        if (close(pipefds[1]) == -1) {
+            perror("close");
+            exit(9);
+        }
+        if (dup2(pipefds[0], STDIN_FILENO) == -1) {
+            perror("dup2");
+            exit(9);
+        }
+        if (close(pipefds[0]) == -1) {
+            perror("close");
+            exit(9);
+        }
         /* Close unnecessary files */
         closecfds();
         /* Fire up the child */
@@ -146,12 +175,24 @@ static void execchild(child_t *currchild)
         exit(9);
     } else {
         /* Setup pipe */
-        close(pipefds[0]);
-        dup2(pipefds[1], STDOUT_FILENO);
-        close(pipefds[1]);
+        if (close(pipefds[0]) == -1) {
+            perror("close");
+            exit(9);
+        }
+        if (dup2(pipefds[1], STDOUT_FILENO) == -1) {
+            perror("dup2");
+            exit(9);
+        }
+        if (close(pipefds[1]) == -1) {
+            perror("close");
+            exit(9);
+        }
         execchild(currchild->next);
         /* If we get this far, we are the first executable in the pipeline */
-        dup2(cstdinfd, STDIN_FILENO);
+        if (dup2(cstdinfd, STDIN_FILENO) == -1) {
+            perror("dup2");
+            exit(9);
+        }
         closecfds();
         if (isbuiltin(currchild->next->buf)) {
             exit(runbuiltin(currchild->next));
