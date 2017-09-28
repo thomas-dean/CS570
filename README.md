@@ -16,3 +16,5 @@ course.
   "|", ";", "'", and "&". Characters and meta characters can be escaped using a
   backslash (\\) character. The word "logout" will also end the program as if
   end of file was found.
+* Two
+  - See [program two's readme](Two/README.md)
