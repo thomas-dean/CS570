@@ -66,7 +66,11 @@ cmd_t *parse(void)
         }
         if (rc == tok_amp) {
             cmd->runinbg = true;
-            strncpy(cmd->cmdstdin, "/dev/null", STORAGE);
+            if (cmd->cmdstdin[0] == '\0') {
+                /* if we have not already redirected stdin, we should read from
+                 * /dev/null */
+                strncpy(cmd->cmdstdin, "/dev/null", STORAGE);
+            }
             *currarg = NULL;
             return cmd;
         }
