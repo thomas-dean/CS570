@@ -54,6 +54,8 @@ cleanup:
 static void sigsetup(void)
 {
     struct sigaction sighandle;
+    sigemptyset(&sighandle.sa_mask);
+    sigaddset(&sighandle.sa_mask, SIGTERM);
     sighandle.sa_flags = SA_RESTART;
     sighandle.sa_handler = SIG_IGN;
 
