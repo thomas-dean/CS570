@@ -113,7 +113,7 @@ cmd_t *parse(void)
         /* Handle a regular word... */
         if (rc != tok_word) {
             fprintf(stderr, "Encounted unknown token type\n");
-            parseerrno = nocmd; /* TODO: use a value that makes sense */
+            parseerrno = interr;
             cmdfree(cmd);
             flushline();
             return NULL;
@@ -203,6 +203,9 @@ void pparseerr(void)
             return;
         case argvsize:
             fprintf(stderr, "Too many arguments to an executable.\n");
+            return;
+        case interr:
+            fprintf(stderr, "An internal error was encountered while parsing.");
             return;
         default:
             fprintf(stderr, "Unknown parse error occurred; error code (%d)\n", parseerrno);

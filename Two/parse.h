@@ -15,6 +15,8 @@ typedef struct child {
     char buf[STORAGE * MAXITEM];  /* Where the actual chars of childargv are stored */
     char *childargv[MAXITEM];     /* argv for child process */
 
+    /* XXX: Make this a doubly linked list, so we don't have to reverse it to
+     * traverse it backwards */
     struct child *next;           /* Next command in the pipeline */
 } child_t;
 
@@ -39,6 +41,7 @@ typedef enum {
     nomem,                        /* Could not allocated space for a command */
     dupredir,                     /* Encountered multiple input / output redirection files */
     argvsize,                     /* Command had too many words to fit into a child's argv (number of words > MAXITEM) */
+    interr                        /* Encountered an internal error while parsing */
 } parseerr_t;
 
 /*
