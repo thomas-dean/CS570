@@ -75,6 +75,11 @@ void execcmd(cmd_t *cmd)
             reverse(&lastchild);
             return;
         }
+        if (close(realstdout) == -1) {
+            perror("close");
+            reverse(&lastchild);
+            return;
+        }
         reverse(&lastchild);
         return;
     }
