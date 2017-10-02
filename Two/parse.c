@@ -205,7 +205,7 @@ void pparseerr(void)
             fprintf(stderr, "Too many arguments to an executable.\n");
             return;
         case interr:
-            fprintf(stderr, "An internal error was encountered while parsing.");
+            fprintf(stderr, "An internal error was encountered while parsing.\n");
             return;
         default:
             fprintf(stderr, "Unknown parse error occurred; error code (%d)\n", parseerrno);
