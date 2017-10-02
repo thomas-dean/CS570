@@ -31,12 +31,14 @@ int runbuiltin(child_t *child)
     if (strcmp(child->buf, "cd") == 0) {
         if (argc > 2) {
             fprintf(stderr, "Too many arguments to cd\n");
+            return -1;
         }
         return cd(child->childargv[1]);
     }
     if (strcmp(child->buf, "ls-F") == 0) {
         if (argc > 2) {
             fprintf(stderr, "Too many arguments to ls-F\n");
+            return -1;
         }
         return ls(child->childargv[1]);
     }
