@@ -42,6 +42,10 @@ void execcmd(cmd_t *cmd)
      * entered in the pipeline. That way when we find that our only child to has
      * died we know that the pipeline is terminated since that only child is the
      * last executable in the pipeline.
+     *
+     * Also note that we must un-reverse the list before we return. Otherwise,
+     * when the caller goes to free the memory used by the linked list, they
+     * will not be able to find all the nodes and we will leak memory.
      */
     lastchild = &cmd->fstchild;
     reverse(&lastchild);
@@ -57,17 +61,21 @@ void execcmd(cmd_t *cmd)
          */
         if ((realstdout = dup(STDOUT_FILENO)) == -1) {
             perror("dup");
+            reverse(&lastchild);
             return;
         }
         if (dup2(cstdoutfd, STDOUT_FILENO) == -1) {
             perror("dup2");
+            reverse(&lastchild);
             return;
         }
         runbuiltin(lastchild);
         if (dup2(realstdout, STDOUT_FILENO) == -1) {
             perror("dup2");
+            reverse(&lastchild);
             return;
         }
+        reverse(&lastchild);
         return;
     }
 
@@ -79,6 +87,7 @@ void execcmd(cmd_t *cmd)
     cpid = fork();
     if (cpid < 0) {
         perror("fork");
+        reverse(&lastchild);
         return;
     }
     if (cpid > 0) {
@@ -121,6 +130,7 @@ void execcmd(cmd_t *cmd)
         }
     }
     closecfds();
+    reverse(&lastchild);
 }
 
 /* XXX: Should be able to work this into execcmd somehow */
