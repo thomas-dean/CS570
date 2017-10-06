@@ -75,7 +75,20 @@ cmd_t *parse(void)
         }
         if (rc == tok_gtbang) {
             cmd->clobber = true;
-            /* FALLTHROUGH to the following if block */
+            if (cmd->cmdstdout[0] != '\0') {
+                /* We have already redirected stdout! */
+                parseerrno = dupredir;
+                cmdfree(cmd);
+                flushline();
+                return NULL;
+            }
+            if (readfilename(cmd->cmdstdout) == NULL) {
+                cmdfree(cmd);
+                flushline();
+                return NULL;
+            }
+            stdoutredirchild = currchild;
+            continue;
         }
         if (rc == tok_gt) {
             if (cmd->cmdstdout[0] != '\0') {
@@ -111,7 +124,7 @@ cmd_t *parse(void)
         }
         /* Handle a regular word... */
         if (rc != tok_word) {
-            fprintf(stderr, "Encounted unknown token type\n");
+            fprintf(stderr, "Encountered unknown token type\n");
             parseerrno = interr;
             cmdfree(cmd);
             flushline();
@@ -265,6 +278,10 @@ static char *readfilename(char *dst)
     token_t rc;
 
     rc = getword(buf);
+    if (rc == tok_errnomatch) {
+        parseerrno = noquote;
+        return NULL;
+    }
     if (rc == tok_newline || rc == tok_semi || rc == tok_eof) {
         parseerrno = nofile;
         return NULL;
@@ -282,7 +299,7 @@ static void flushline(void)
     char buf[STORAGE];
     token_t rc;
 
-    while ((rc = getword(buf)) != tok_newline && rc != tok_amp) {
+    while ((rc = getword(buf)) != tok_newline && rc != tok_amp && rc != tok_eof) {
         ;
     }
 }

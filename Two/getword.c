@@ -12,7 +12,7 @@ static int rmwhitespc(void);
 
 token_t getword(char *w)
 {
-    int c;
+    int c, c1;
     int i = 0;
     char *p = w;
 
@@ -20,39 +20,26 @@ top:
     c = rmwhitespc();
     switch (c) {
         case ';':
-            *p = '\0';
             return tok_semi;
         case '\n':
-            *p = '\0';
             return tok_newline;
         case EOF:
-            *p = '\0';
             return tok_eof;
         case '<':
-            *p++ = (char) c;
-            *p = '\0';
             return tok_lt;
         case '|':
-            *p++ = (char) c;
-            *p = '\0';
             return tok_pipe;
         case '&':
-            *p++ = (char) c;
-            *p = '\0';
             return tok_amp;
         case '>':
             /* ">" */
-            *p++ = '>';
             c = getchar();
             if (c == '!') {
                 /* ">!" */
-                *p++ = '!';
-                *p = '\0';
                 return tok_gtbang;
             }
             /* ">" and some other character... */
             ungetc(c, stdin);
-            *p = '\0';
             return tok_gt;
     }
 
@@ -99,7 +86,7 @@ top:
                         return tok_errnomatch;
                     }
                     if (c == '\\') {
-                        int c1 = getchar();
+                        c1 = getchar();
                         if (c1 == '\'') {
                             /* "\'" => "'" */
                             c = '\'';
