@@ -4,10 +4,6 @@
 #include <signal.h>
 
 static void sigsetup(void);
-#ifdef DEBUG
-static void printcmddebug(cmd_t *cmd);
-#endif
-
 
 int main()
 {
