@@ -12,12 +12,6 @@
  */
 static void execchild(child_t *currchild);
 
-/*
- * Reverse the linked list of children pointed to by head
- */
-static void reverse(child_t **head);
-static void reverse_helper(child_t *curr, child_t *prev, child_t **head);
-
 void execcmd(cmd_t *cmd)
 {
     child_t *lastchild;
@@ -33,7 +27,7 @@ void execcmd(cmd_t *cmd)
     }
 
     /*
-     * Why are we reversing the order of the pipeline?
+     * Why are we setting up the pipeline in reverse order?
      *
      * First, it is when the last executable in a pipeline dies which determines
      * when the pipeline has terminated.
@@ -42,13 +36,8 @@ void execcmd(cmd_t *cmd)
      * entered in the pipeline. That way when we find that our only child to has
      * died we know that the pipeline is terminated since that only child is the
      * last executable in the pipeline.
-     *
-     * Also note that we must un-reverse the list before we return. Otherwise,
-     * when the caller goes to free the memory used by the linked list, they
-     * will not be able to find all the nodes and we will leak memory.
      */
-    lastchild = &cmd->fstchild;
-    reverse(&lastchild);
+    lastchild = cmd->lastchild;
 
     /*
      * No need to fork if we are running a builtin command which is not in a
@@ -61,26 +50,21 @@ void execcmd(cmd_t *cmd)
          */
         if ((realstdout = dup(STDOUT_FILENO)) == -1) {
             perror("dup");
-            reverse(&lastchild);
             return;
         }
         if (dup2(cstdoutfd, STDOUT_FILENO) == -1) {
             perror("dup2");
-            reverse(&lastchild);
             return;
         }
         runbuiltin(lastchild);
         if (dup2(realstdout, STDOUT_FILENO) == -1) {
             perror("dup2");
-            reverse(&lastchild);
             return;
         }
         if (close(realstdout) == -1) {
             perror("close");
-            reverse(&lastchild);
             return;
         }
-        reverse(&lastchild);
         return;
     }
 
@@ -92,7 +76,6 @@ void execcmd(cmd_t *cmd)
     cpid = fork();
     if (cpid < 0) {
         perror("fork");
-        reverse(&lastchild);
         return;
     }
     if (cpid > 0) {
@@ -115,7 +98,7 @@ void execcmd(cmd_t *cmd)
             exit(9);
         }
 
-        if (lastchild->next == NULL) {
+        if (lastchild->prev == NULL) {
             /* Simple command; no pipeline */
 
             /* Redirect stdin */
@@ -129,13 +112,9 @@ void execcmd(cmd_t *cmd)
             exit(9);
         }
 
-        if (lastchild->next != NULL) {
-            execchild(lastchild);
-            /* I'm not the first one in the pipe, so we cannot get here */
-        }
+        execchild(lastchild);
     }
     closecfds();
-    reverse(&lastchild);
 }
 
 /* XXX: Should be able to work this into execcmd somehow */
@@ -144,7 +123,7 @@ static void execchild(child_t *currchild)
     pid_t cpid;
     int pipefds[2];
 
-    if (currchild->next == NULL) {
+    if (currchild->prev == NULL) {
         return;
     }
 
@@ -202,40 +181,18 @@ static void execchild(child_t *currchild)
             perror("close");
             exit(9);
         }
-        execchild(currchild->next);
+        execchild(currchild->prev);
         /* If we get this far, we are the first executable in the pipeline */
         if (dup2(cstdinfd, STDIN_FILENO) == -1) {
             perror("dup2");
             exit(9);
         }
         closecfds();
-        if (isbuiltin(currchild->next->buf)) {
-            exit(runbuiltin(currchild->next));
+        if (isbuiltin(currchild->prev->buf)) {
+            exit(runbuiltin(currchild->prev));
         }
-        execvp(currchild->next->buf, currchild->next->childargv);
-        perror(currchild->next->buf);
+        execvp(currchild->prev->buf, currchild->prev->childargv);
+        perror(currchild->prev->buf);
         exit(9);
     }
 }
-
-static void reverse(child_t **head)
-{
-    if (head == NULL) {
-        return;
-    }
-    reverse_helper(*head, NULL, head);
-}
-
-static void reverse_helper(child_t *curr, child_t *prev, child_t **head)
-{
-    if (curr->next == NULL)
-    {
-        *head = curr;
-        curr->next = prev;
-        return;
-    }
-    child_t *next = curr->next;
-    curr->next = prev;
-    reverse_helper(next, curr, head);
-}
-

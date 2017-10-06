@@ -15,8 +15,7 @@ typedef struct child {
     char buf[STORAGE * MAXITEM];  /* Where the actual chars of childargv are stored */
     char *childargv[MAXITEM];     /* argv for child process */
 
-    /* XXX: Make this a doubly linked list, so we don't have to reverse it to
-     * traverse it backwards */
+    struct child *prev;           /* Previous command in the pipeline */
     struct child *next;           /* Next command in the pipeline */
 } child_t;
 
@@ -29,6 +28,7 @@ typedef struct cmd {
     char cmdstdout[MAXNAMLEN];    /* Filename of child processes stdout */
 
     child_t fstchild;             /* Linked list of processes to run for the command */
+    child_t *lastchild;           /* Last child in doubly linked list of process to run */
 } cmd_t;
 
 /* Parse error codes */

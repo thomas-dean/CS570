@@ -36,12 +36,10 @@ cmd_t *parse(void)
             return NULL;
         }
         if (rc == tok_newline || rc == tok_semi) {
-            *currarg = NULL;
             break;
         }
         if (rc == tok_eof) {
             cmd->foundeof = true;
-            *currarg = NULL;
             break;
         }
         /* Handle meta characters... */
@@ -59,6 +57,7 @@ cmd_t *parse(void)
                 return NULL;
             }
             *currarg = NULL;
+            currchild->next->prev = currchild;
             currchild = currchild->next;
             p = currchild->buf;
             currarg = currchild->childargv;
@@ -70,9 +69,9 @@ cmd_t *parse(void)
                 /* if we have not already redirected stdin, we should read from
                  * /dev/null */
                 strncpy(cmd->cmdstdin, "/dev/null", STORAGE);
+                stdinredirchild = &cmd->fstchild; /* To sasiate the sanity checks at the end */
             }
-            *currarg = NULL;
-            return cmd;
+            break;
         }
         if (rc == tok_gtbang) {
             cmd->clobber = true;
@@ -131,6 +130,8 @@ cmd_t *parse(void)
         *currarg++ = p;
         p += strlen(buf) + 1; /* Move p passed the word and the null terminator */
     }
+    *currarg = NULL;
+    cmd->lastchild = currchild;
 
     /* ============== Sanity checks ============== */
     /* We can't redirect stdin and stdout without specifying an executable */
@@ -236,7 +237,10 @@ static cmd_t *newcmd(void)
 
     rv->fstchild.buf[0] = '\0';
     rv->fstchild.childargv[0] = NULL;
+    rv->fstchild.prev = NULL;
     rv->fstchild.next = NULL;
+
+    rv->lastchild = &rv->fstchild;
 
     return rv;
 }
@@ -249,6 +253,7 @@ static child_t *newchild(void)
     }
     rv->buf[0] = '\0';
     rv->childargv[0] = NULL;
+    rv->prev = NULL;
     rv->next = NULL;
 
     return rv;
