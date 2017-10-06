@@ -41,7 +41,7 @@ Available targets:
   - Creates a `tags` file which is used to jump to function and macro
   definitions among other things. See `ctags(3)`.
 * lint
-  - Runs clang's linter of all source files
+  - Runs clang's linter over all source files
 
 ### p2.c
 
