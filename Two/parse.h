@@ -8,7 +8,6 @@
 #include <stdlib.h>
 
 #define MAXITEM 100
-#define MAXCMD 2
 
 typedef struct child {
     /* Argument vector information */
