@@ -83,6 +83,7 @@ top:
                     if (c == '\n') {
                         /* Encounted a new line when inside a quote */
                         *p = '\0';
+                        ungetc(c, stdin);
                         return tok_errnomatch;
                     }
                     if (c == '\\') {
