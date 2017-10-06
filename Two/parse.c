@@ -84,7 +84,9 @@ cmd_t *parse(void)
             }
             if (readfilename(cmd->cmdstdout) == NULL) {
                 cmdfree(cmd);
-                flushline();
+                if (parseerrno != noquote) {
+                    flushline();
+                }
                 return NULL;
             }
             stdoutredirchild = currchild;
@@ -100,7 +102,9 @@ cmd_t *parse(void)
             }
             if (readfilename(cmd->cmdstdout) == NULL) {
                 cmdfree(cmd);
-                flushline();
+                if (parseerrno != noquote) {
+                    flushline();
+                }
                 return NULL;
             }
             stdoutredirchild = currchild;
@@ -116,7 +120,9 @@ cmd_t *parse(void)
             }
             if (readfilename(cmd->cmdstdin) == NULL) {
                 cmdfree(cmd);
-                flushline();
+                if (parseerrno != noquote) {
+                    flushline();
+                }
                 return NULL;
             }
             stdinredirchild = currchild;
