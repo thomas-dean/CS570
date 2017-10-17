@@ -95,7 +95,7 @@ void execcmd(cmd_t *cmd)
          */
         if (dup2(cstdoutfd, STDOUT_FILENO) == -1) {
             perror("dup2");
-            exit(9);
+            exit(10);
         }
 
         if (lastchild->prev == NULL) {
@@ -104,12 +104,12 @@ void execcmd(cmd_t *cmd)
             /* Redirect stdin */
             if (dup2(cstdinfd, STDIN_FILENO) == -1) {
                 perror("dup2");
-                exit(9);
+                exit(10);
             }
             closecfds();
             execvp(lastchild->buf, lastchild->childargv);
             perror(lastchild->buf);
-            exit(9);
+            exit(11);
         }
 
         execchild(lastchild);
@@ -140,7 +140,7 @@ static void execchild(child_t *currchild)
 
     if (pipe(pipefds) == -1) {
         perror("pipe");
-        exit(9);
+        exit(8);
     }
     cpid = fork();
     if (cpid < 0) {
@@ -151,41 +151,41 @@ static void execchild(child_t *currchild)
         /* Setup pipe */
         if (close(pipefds[1]) == -1) {
             perror("close");
-            exit(9);
+            exit(12);
         }
         if (dup2(pipefds[0], STDIN_FILENO) == -1) {
             perror("dup2");
-            exit(9);
+            exit(10);
         }
         if (close(pipefds[0]) == -1) {
             perror("close");
-            exit(9);
+            exit(12);
         }
         /* Close unnecessary files */
         closecfds();
         /* Fire up the child */
         execvp(currchild->buf, currchild->childargv);
         perror(currchild->buf);
-        exit(9);
+        exit(11);
     } else {
         /* Setup pipe */
         if (close(pipefds[0]) == -1) {
             perror("close");
-            exit(9);
+            exit(12);
         }
         if (dup2(pipefds[1], STDOUT_FILENO) == -1) {
             perror("dup2");
-            exit(9);
+            exit(10);
         }
         if (close(pipefds[1]) == -1) {
             perror("close");
-            exit(9);
+            exit(12);
         }
         execchild(currchild->prev);
         /* If we get this far, we are the first executable in the pipeline */
         if (dup2(cstdinfd, STDIN_FILENO) == -1) {
             perror("dup2");
-            exit(9);
+            exit(10);
         }
         closecfds();
         if (isbuiltin(currchild->prev->buf)) {
@@ -193,6 +193,6 @@ static void execchild(child_t *currchild)
         }
         execvp(currchild->prev->buf, currchild->prev->childargv);
         perror(currchild->prev->buf);
-        exit(9);
+        exit(11);
     }
 }
