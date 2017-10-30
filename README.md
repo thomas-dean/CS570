@@ -18,3 +18,5 @@ course.
   end of file was found.
 * Two
   - See [program two's readme](Two/README.md)
+* Three
+  - See [program three's readme](Three/README.md)
