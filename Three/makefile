@@ -31,4 +31,4 @@ tags:		p3helper.c p3main.c p3.h CHK.h
 		exctags -R --fields=+S --c-kinds=+defgmstux
 
 lint:
-		clang-tidy39 '-header-filter=.*' '-checks=*' *.c --
+		clang-tidy50 '-checks=*' p3helper.c --
