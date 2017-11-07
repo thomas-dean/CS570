@@ -95,7 +95,7 @@ void epilog(int kind, int protocol)
             pCHK(sem_post(&wlock));
             pCHK(sem_wait(&wcountlock));
             if (--wcount == 0) {
-                /* I was the last writer to leave, let's let the a reader enter */
+                /* I was the last writer to leave, let's let a reader enter */
                 pCHK(sem_post(&rlock));
             }
             pCHK(sem_post(&wcountlock));
