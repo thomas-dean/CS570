@@ -1,0 +1,7 @@
+*.o
+*.swp
+*.core
+p2
+getword_test
+tags
+cscope.*out
