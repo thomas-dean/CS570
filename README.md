@@ -20,3 +20,5 @@ course.
   - See [program two's readme](Two/README.md)
 * Three
   - See [program three's readme](Three/README.md)
+* Four
+  - See [program four's readme](Four/README.md)
