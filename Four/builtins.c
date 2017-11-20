@@ -6,7 +6,8 @@ static char *builtins[] = {
     NULL
 };
 
-static int ls(const char *dir);
+static void display(char *filename);
+static int ls(int argc, char *argv[]);
 static int cd(char *dir);
 
 bool isbuiltin(char *exename)
@@ -36,44 +37,92 @@ int runbuiltin(child_t *child)
         return cd(child->childargv[1]);
     }
     if (strcmp(child->buf, "ls-F") == 0) {
-        if (argc > 2) {
-            fprintf(stderr, "Too many arguments to ls-F\n");
-            return -1;
-        }
-        return ls(child->childargv[1]);
+        return ls(argc, child->childargv);
     }
     fprintf(stderr, "Internal error: failed to find builtin for %s\n", child->buf);
     return -1;
 }
 
-static int ls(const char *dir)
+static void display(char *filename)
+{
+    struct stat sb;
+    struct stat lsb;
+
+    if (lstat(filename, &lsb) == -1) {
+        perror(filename);
+        return;
+    }
+    if (S_ISDIR(lsb.st_mode)) {
+        printf("%s/\n", basename(filename));
+    } else if (S_ISLNK(lsb.st_mode)) {
+        if (stat(filename, &sb) == -1) {
+            /* lstat succeeded, but stat failed -> broken link */
+            printf("%s&\n", basename(filename));
+        } else {
+            printf("%s@\n", basename(filename));
+        }
+    } else if (lsb.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
+        printf("%s*\n", basename(filename));
+    } else {
+        printf("%s\n", basename(filename));
+    }
+}
+
+static int ls(int argc, char *argv[])
 {
     DIR *entry;
     struct dirent *dp;
     struct stat sb;
+    char path[PATH_MAX + 1];
 
-    if (dir == NULL) {
-        dir = ".";
-    }
-    if (stat(dir, &sb) == -1) {
-        perror(dir);
-        return EOPEN;
-    }
-    if (S_ISDIR(sb.st_mode)) {
-        if ((entry = opendir(dir)) == NULL) {
-            perror(dir);
+    if (argc == 1) {
+        if ((entry = opendir(".")) == NULL) {
+            perror(".");
             return EOPEN;
         }
         while ((dp = readdir(entry)) != NULL) {
-            printf("%s\n", dp->d_name);
+            /* Current directory -> we don't need to construct the full path */
+            display(dp->d_name);
         }
         if (closedir(entry) == -1) {
             perror("closedir");
             return ECLOSE;
         }
-    } else {
-        /* stat succeeded + a non-directory -> just print the filename */
-        printf("%s\n", dir);
+    }
+    argv++; /* move past argv[0] which should always be 'ls-F' */
+
+    while (*argv != NULL) {
+        char *file = *argv++;
+
+        if (lstat(file, &sb) == -1) {
+            perror(file);
+            continue;
+        }
+        if (S_ISDIR(sb.st_mode)) {
+            if ((entry = opendir(file)) == NULL) {
+                perror(file);
+                return EOPEN;
+            }
+            while ((dp = readdir(entry)) != NULL) {
+                strncpy(path, file, PATH_MAX);
+                strncat(path, "/", 1);
+                /*
+                 * This should really be PATH_MAX - strlen(file), but file is at
+                 * most STORAGE which is 255 and the max length for the d_name
+                 * field is 255 and PATH_MAX is usually 4096. So we will not
+                 * overrun our buffer since 4096 > 255 + 255.
+                 */
+                strncat(path, dp->d_name, PATH_MAX);
+                display(path);
+            }
+            if (closedir(entry) == -1) {
+                perror("closedir");
+                return ECLOSE;
+            }
+        } else {
+            /* stat succeeded + a non-directory -> just print the filename */
+            display(file);
+        }
     }
     return 0;
 }
