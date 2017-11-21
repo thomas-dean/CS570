@@ -3,12 +3,14 @@
 static char *builtins[] = {
     "ls-F",
     "cd",
+    "exec",
     NULL
 };
 
 static void display(char *filename);
 static int ls(int argc, char *argv[]);
 static int cd(char *dir);
+static void exec(int argc, char *argv[]);
 
 bool isbuiltin(char *exename)
 {
@@ -38,6 +40,9 @@ int runbuiltin(child_t *child)
     }
     if (strcmp(child->buf, "ls-F") == 0) {
         return ls(argc, child->childargv);
+    }
+    if (strcmp(child->buf, "exec") == 0) {
+        exec(argc, child->childargv);
     }
     fprintf(stderr, "Internal error: failed to find builtin for %s\n", child->buf);
     return -1;
@@ -140,4 +145,12 @@ static int cd(char *dir) {
         return ECHDIR;
     }
     return 0;
+}
+
+static void exec(int argc, char *argv[])
+{
+    char **newargv;
+
+    newargv = argv + 1;
+    execvp(newargv[0], newargv);
 }
