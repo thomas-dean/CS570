@@ -43,6 +43,7 @@ int runbuiltin(child_t *child)
     }
     if (strcmp(child->buf, "exec") == 0) {
         exec(argc, child->childargv);
+        return -1;
     }
     fprintf(stderr, "Internal error: failed to find builtin for %s\n", child->buf);
     return -1;
@@ -153,4 +154,5 @@ static void exec(int argc, char *argv[])
 
     newargv = argv + 1;
     execvp(newargv[0], newargv);
+    perror(newargv[0]);
 }
