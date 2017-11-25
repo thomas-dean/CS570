@@ -1,23 +1,12 @@
 #include "exec.h"
 
-/*
- * Spawn the previous executable in the pipeline
- *
- * Only returns if you pass a currchild without a next child in the list.
- * Spawns child pointed to by currchild.
- *
- * Assumes that the process has already setup its own stdout.
- *
- * This will recursively spawn all children in the pipe
- */
-static void execchild(child_t *currchild);
-
 void execcmd(cmd_t *cmd)
 {
-    child_t *lastchild;
+    child_t *lastchild, *currchild;
     char *infile, *outfile;
     int cstatus, realstdout;
     pid_t cpid;
+    int pipefds[2];
 
     infile = cmd->cmdstdin[0] == '\0' ? NULL : cmd->cmdstdin;
     outfile = cmd->cmdstdout[0] == '\0' ? NULL : cmd->cmdstdout;
@@ -98,101 +87,78 @@ void execcmd(cmd_t *cmd)
             exit(10);
         }
 
-        if (lastchild->prev == NULL) {
-            /* Simple command; no pipeline */
-
-            /* Redirect stdin */
-            if (dup2(cstdinfd, STDIN_FILENO) == -1) {
-                perror("dup2");
-                exit(10);
+        for (currchild = lastchild; currchild->prev != NULL; currchild = currchild->prev) {
+            if (isbuiltin(currchild->buf)) {
+                /*
+                 * NOTE: If we get to this point we are going to stop executing the
+                 * pipeline and just run the builtin as if it was the first executable
+                 * in the pipline. This means any executables before this builtin will
+                 * not be run
+                 */
+                /* We are a forked child, so its OK for us to die */
+                exit(runbuiltin(currchild));
             }
-            closecfds();
-            execvp(lastchild->buf, lastchild->childargv);
-            perror(lastchild->buf);
-            exit(11);
+
+            if (pipe(pipefds) == -1) {
+                perror("pipe");
+                exit(8);
+            }
+            cpid = fork();
+            if (cpid < 0) {
+                perror("fork");
+                exit(9);
+            }
+            if (cpid > 0) {
+                /* Setup pipe */
+                if (close(pipefds[1]) == -1) {
+                    perror("close");
+                    exit(12);
+                }
+                if (dup2(pipefds[0], STDIN_FILENO) == -1) {
+                    perror("dup2");
+                    exit(10);
+                }
+                if (close(pipefds[0]) == -1) {
+                    perror("close");
+                    exit(12);
+                }
+                /* Close unnecessary files */
+                closecfds();
+                /* Fire up the child */
+                execvp(currchild->buf, currchild->childargv);
+                perror(currchild->buf);
+                exit(11);
+            } else {
+                /* Setup pipe */
+                if (close(pipefds[0]) == -1) {
+                    perror("close");
+                    exit(12);
+                }
+                if (dup2(pipefds[1], STDOUT_FILENO) == -1) {
+                    perror("dup2");
+                    exit(10);
+                }
+                if (close(pipefds[1]) == -1) {
+                    perror("close");
+                    exit(12);
+                }
+            }
         }
 
-        execchild(lastchild);
-    }
-    closecfds();
-}
+        /* First child in the pipeline */
 
-/* XXX: Should be able to work this into execcmd somehow */
-static void execchild(child_t *currchild)
-{
-    pid_t cpid;
-    int pipefds[2];
-
-    if (currchild->prev == NULL) {
-        return;
-    }
-
-    if (isbuiltin(currchild->buf)) {
-        /*
-         * NOTE: If we get to this point we are going to stop executing the
-         * pipeline and just run the builtin as if it was the first executable
-         * in the pipline. This means any executables before this builtin will
-         * not be run
-         */
-        /* We are a forked child, so its OK for us to die */
-        exit(runbuiltin(currchild));
-    }
-
-    if (pipe(pipefds) == -1) {
-        perror("pipe");
-        exit(8);
-    }
-    cpid = fork();
-    if (cpid < 0) {
-        perror("fork");
-        exit(9);
-    }
-    if (cpid > 0) {
-        /* Setup pipe */
-        if (close(pipefds[1]) == -1) {
-            perror("close");
-            exit(12);
-        }
-        if (dup2(pipefds[0], STDIN_FILENO) == -1) {
-            perror("dup2");
-            exit(10);
-        }
-        if (close(pipefds[0]) == -1) {
-            perror("close");
-            exit(12);
-        }
-        /* Close unnecessary files */
-        closecfds();
-        /* Fire up the child */
-        execvp(currchild->buf, currchild->childargv);
-        perror(currchild->buf);
-        exit(11);
-    } else {
-        /* Setup pipe */
-        if (close(pipefds[0]) == -1) {
-            perror("close");
-            exit(12);
-        }
-        if (dup2(pipefds[1], STDOUT_FILENO) == -1) {
-            perror("dup2");
-            exit(10);
-        }
-        if (close(pipefds[1]) == -1) {
-            perror("close");
-            exit(12);
-        }
-        execchild(currchild->prev);
-        /* If we get this far, we are the first executable in the pipeline */
+        /* Redirect stdin */
         if (dup2(cstdinfd, STDIN_FILENO) == -1) {
             perror("dup2");
             exit(10);
         }
         closecfds();
-        if (isbuiltin(currchild->prev->buf)) {
-            exit(runbuiltin(currchild->prev));
+        if (isbuiltin(currchild->buf)) {
+            exit(runbuiltin(currchild));
         }
-        execvp(currchild->prev->buf, currchild->prev->childargv);
-        perror(currchild->prev->buf);
+        execvp(currchild->buf, currchild->childargv);
+        perror(currchild->buf);
         exit(11);
     }
+    closecfds();
 }
